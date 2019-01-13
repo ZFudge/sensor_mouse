@@ -5,6 +5,7 @@ const int xNegative = A1;
 const int yPositive = A2;
 const int yNegative = A3;
 const int pressRelease = A4;
+const int slowMovement = A5;
 
 const int sensorDelay = 1000;
 
@@ -13,7 +14,8 @@ int sensors[] = {
   xNegative,
   yPositive,
   yNegative,
-  pressRelease
+  pressRelease,
+  slowMovement
 };
 
 void setup() {
@@ -23,15 +25,17 @@ void setup() {
   pinMode(yPositive, INPUT);
   pinMode(yNegative, INPUT);
   pinMode(pressRelease, INPUT);
+  pinMode(slowMovement, INPUT);
   Mouse.begin();
 }
 
 void loop() {
-  int xPositiveReading = touchBinary(0);
-  int xNegativeReading = touchBinary(1);
-  int yPositiveReading = touchBinary(2);
-  int yNegativeReading = touchBinary(3);
-  int pressReleaseReading = touchBinary(4);
+  int xPositiveReading =  analogRead(0); // touchBinary(0);
+  int xNegativeReading =  analogRead(1); // touchBinary(1);
+  int yPositiveReading =  analogRead(2); // touchBinary(2);
+  int yNegativeReading =  analogRead(3); // touchBinary(3);
+  int pressReleaseReading =  analogRead(4); // touchBinary(4);
+  int slowMovementReading =  analogRead(5); // touchBinary(5);
   if (pressReleaseReading) {
     if (!Mouse.isPressed()) {
       Mouse.press();
@@ -42,19 +46,21 @@ void loop() {
   if ((xPositiveReading ^ xNegativeReading) || (yPositiveReading ^ yNegativeReading)) {
     int x = 0;
     int y = 0;
+    int unit = slowMovement ? 3 : 6;
     if (xPositiveReading ^ xNegativeReading) {
-      x = xPositiveReading ? -3 : 3;
+      x = xPositiveReading ? -unit : unit;
     }
     if (yPositiveReading ^ yNegativeReading) {
-      y = yPositiveReading ? -3 : 3;
+      y = yPositiveReading ? -unit : unit;
     }
     Mouse.move(x, y, 0);
   }
-  Serial.println("X_Positive" + String(xPositiveReading));
-  Serial.println("X_Negative" + String(xNegativeReading));
-  Serial.println("Y_Positive" + String(yPositiveReading));
-  Serial.println("Y_Negative" + String(yNegativeReading));
-  Serial.println("PRESS" + String(pressReleaseReading));
+  Serial.println("X_Positive: " + String(xPositiveReading));
+  Serial.println("X_Negative: " + String(xNegativeReading));
+  Serial.println("Y_Positive: " + String(yPositiveReading));
+  Serial.println("Y_Negative: " + String(yNegativeReading));
+  Serial.println("PRESS:      " + String(pressReleaseReading));
+  Serial.println("SLOW        " + String(slowMovementReading));
   Serial.println();
   delay(sensorDelay);
 }
