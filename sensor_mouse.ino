@@ -1,39 +1,34 @@
-#include <CapacitiveSensor.h>
 #include <Mouse.h>
+#include <CapacitiveSensor.h>
 
-CapacitiveSensor pressRelease = CapacitiveSensor(2,3);
-CapacitiveSensor xPositive = CapacitiveSensor(4,5);
-CapacitiveSensor xNegative = CapacitiveSensor(6,7);
-CapacitiveSensor yPositive = CapacitiveSensor(8,9);
+CapacitiveSensor xPositive = CapacitiveSensor(2,3);
+CapacitiveSensor xNegative = CapacitiveSensor(4,5);
+CapacitiveSensor pressRelease = CapacitiveSensor(6,7);
+CapacitiveSensor slowMovement = CapacitiveSensor(8,9);
 CapacitiveSensor yNegative = CapacitiveSensor(10,11);
-CapacitiveSensor slowMovement = CapacitiveSensor(12,13);
+CapacitiveSensor yPositive = CapacitiveSensor(12,13);
 
-const int sensorDelay = 500;
-const int sensorThreshold = 1000;
+const int sensorThreshold = 100;
 const int samples = 8;
-const int slowUnit = 3;
-const int fastUnit = 6;
+const int speed_increment = 4;
+int sensorDelay = 25;
+
+int raw_reading = 0;
 
 void setup() {
   Serial.begin(9600);
-//  pressRelease.set_CS_AutocaL_Millis(0xFFFFFFFF);
-//  xPositive.set_CS_AutocaL_Millis(0xFFFFFFFF);
-//  xNegative.set_CS_AutocaL_Millis(0xFFFFFFFF);
-//  yPositive.set_CS_AutocaL_Millis(0xFFFFFFFF);
-//  yNegative.set_CS_AutocaL_Millis(0xFFFFFFFF);
-//  slowMovement.set_CS_AutocaL_Millis(0xFFFFFFFF);
   Mouse.begin();
 }
 
 void loop() {
   long start = millis();
 
-  long pressReleaseReading = pressRelease.capacitiveSensor(samples); // touchBinary(pressRelease.capacitiveSensor(30));
-  long xPositiveReading = xPositive.capacitiveSensor(samples); // touchBinary(xPositive.capacitiveSensor(30));
-  long xNegativeReading = xNegative.capacitiveSensor(samples); // touchBinary(xNegative.capacitiveSensor(30));
-  long yPositiveReading = yPositive.capacitiveSensor(samples); // touchBinary(yPositive.capacitiveSensor(30));
-  long yNegativeReading = yNegative.capacitiveSensor(samples); // touchBinary(yNegative.capacitiveSensor(30));
-  long slowMovementReading = slowMovement.capacitiveSensor(samples); // touchBinary(slowMovement.capacitiveSensor(30));
+  long pressReleaseReading = !raw_reading ? touchBinary(pressRelease.capacitiveSensor(samples)) : pressRelease.capacitiveSensor(samples);
+  long xPositiveReading = !raw_reading ? touchBinary(xPositive.capacitiveSensor(samples)) : xPositive.capacitiveSensor(samples);
+  long xNegativeReading = !raw_reading ? touchBinary(xNegative.capacitiveSensor(samples)) : xNegative.capacitiveSensor(samples);
+  long yPositiveReading = !raw_reading ? touchBinary(yPositive.capacitiveSensor(samples)) : yPositive.capacitiveSensor(samples);
+  long yNegativeReading = !raw_reading ? touchBinary(yNegative.capacitiveSensor(samples)) : yNegative.capacitiveSensor(samples);
+  long slowMovementReading = !raw_reading ? touchBinary(slowMovement.capacitiveSensor(samples)) : slowMovement.capacitiveSensor(samples);
 
   Serial.println(millis() - start);        // check on performance in ms
   Serial.println("PRESS:      " + String(pressReleaseReading));
@@ -55,7 +50,7 @@ void loop() {
   if ((xPositiveReading ^ xNegativeReading) || (yPositiveReading ^ yNegativeReading)) {
     int x = 0;
     int y = 0;
-    int unit = slowMovement ? slowUnit : fastUnit;
+    int unit = slowMovementReading ? speed_increment : speed_increment * 1.5;
     if (xPositiveReading ^ xNegativeReading) {
       x = xPositiveReading ? -unit : unit;
     }
@@ -65,7 +60,18 @@ void loop() {
     Mouse.move(x, y, 0);
   }
   
+  int active = (pressReleaseReading || xPositiveReading || xNegativeReading || yPositiveReading || yNegativeReading || slowMovementReading);
+  sensorDelay_Check_Set(active);
+  
   delay(sensorDelay);
+}
+
+void sensorDelay_Check_Set(int active) {
+    if (active && sensorDelay == 750) {
+      sensorDelay = 25;
+    } else if (!active && sensorDelay == 25) {
+      sensorDelay = 750;
+    }
 }
 
 int touchBinary(long reading) {
