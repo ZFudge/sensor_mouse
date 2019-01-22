@@ -1,8 +1,8 @@
 #include <Mouse.h>
 #include <CapacitiveSensor.h>
 
-CapacitiveSensor xPositive = CapacitiveSensor(2,3);
-CapacitiveSensor xNegative = CapacitiveSensor(4,5);
+CapacitiveSensor xNegative = CapacitiveSensor(2,3);
+CapacitiveSensor xPositive = CapacitiveSensor(4,5);
 CapacitiveSensor pressRelease = CapacitiveSensor(6,7);
 CapacitiveSensor slowMovement = CapacitiveSensor(8,9);
 CapacitiveSensor yNegative = CapacitiveSensor(10,11);
@@ -11,7 +11,9 @@ CapacitiveSensor yPositive = CapacitiveSensor(12,13);
 const int sensorThreshold = 100;
 const int samples = 8;
 const int speed_increment = 4;
-int sensorDelay = 25;
+const int long_delay = 500;
+const int short_delay = 20;
+int sensorDelay = long_delay;
 
 int raw_reading = 0;
 
@@ -39,38 +41,47 @@ void loop() {
   Serial.println("SLOW:       " + String(slowMovementReading));
   Serial.println();
 
-  if (pressReleaseReading) {
-    if (!Mouse.isPressed()) {
-      Mouse.press();
-    }
-  } else if (Mouse.isPressed()) {
-    Mouse.release();
-  }
+  mousePress(pressReleaseReading);
 
-  if ((xPositiveReading ^ xNegativeReading) || (yPositiveReading ^ yNegativeReading)) {
-    int x = 0;
-    int y = 0;
-    int unit = slowMovementReading ? speed_increment : speed_increment * 1.5;
-    if (xPositiveReading ^ xNegativeReading) {
-      x = xPositiveReading ? -unit : unit;
-    }
-    if (yPositiveReading ^ yNegativeReading) {
-      y = yPositiveReading ? -unit : unit;
-    }
-    Mouse.move(x, y, 0);
-  }
-  
+  mouseMovement(xPositiveReading, xNegativeReading, yPositiveReading, yNegativeReading, slowMovementReading);
+
   int active = (pressReleaseReading || xPositiveReading || xNegativeReading || yPositiveReading || yNegativeReading || slowMovementReading);
   sensorDelay_Check_Set(active);
   
   delay(sensorDelay);
 }
 
+void mouseMovement(int xPos, int xNeg, int yPos, int yNeg, int slow) {
+  if ((xPos ^ xNeg) || (yPos ^ yNeg)) {
+    int x = 0;
+    int y = 0;
+    int unit = slow ? speed_increment : speed_increment * 1.5;
+    if (xPos ^ xNeg) {
+      x = xPos ? -unit : unit;
+    }
+    if (yPos ^ yNeg) {
+      y = yPos ? -unit : unit;
+    }
+    Mouse.move(x, y, 0);
+  }
+  
+}
+
+void mousePress(int pressed) {
+  if (pressed) {
+    if (!Mouse.isPressed()) {
+      Mouse.press();
+    }
+  } else if (Mouse.isPressed()) {
+    Mouse.release();
+  }
+}
+
 void sensorDelay_Check_Set(int active) {
-    if (active && sensorDelay == 750) {
-      sensorDelay = 25;
-    } else if (!active && sensorDelay == 25) {
-      sensorDelay = 750;
+    if (active && sensorDelay == long_delay) {
+      sensorDelay = short_delay;
+    } else if (!active && sensorDelay == short_delay) {
+      sensorDelay = long_delay;
     }
 }
 
