@@ -1,15 +1,15 @@
 #include <Mouse.h>
 #include <CapacitiveSensor.h>
 
-CapacitiveSensor xNegative = CapacitiveSensor(0, 1);
-CapacitiveSensor pressReleaseLeft = CapacitiveSensor(2, 3);
-CapacitiveSensor xPositive= CapacitiveSensor(4, 5);
+CapacitiveSensor yPositive = CapacitiveSensor(0, 1);
+CapacitiveSensor pressReleaseRight = CapacitiveSensor(2, 3);
+CapacitiveSensor yNegative = CapacitiveSensor(4, 5);
 CapacitiveSensor slowMovement = CapacitiveSensor(6, 7);
-CapacitiveSensor yNegative = CapacitiveSensor(8, 9);
-CapacitiveSensor pressReleaseRight = CapacitiveSensor(10, 11);
-CapacitiveSensor yPositive = CapacitiveSensor(12, 13);
+CapacitiveSensor xPositive= CapacitiveSensor(8, 9);
+CapacitiveSensor pressReleaseLeft = CapacitiveSensor(10, 11);
+CapacitiveSensor xNegative = CapacitiveSensor(12, 13);
 
-const int sensorThreshold = 80;
+const int sensorThreshold = 250;
 const int samples = 8;
 const int speed_increment = 4;
 const int long_delay = 200;
@@ -68,20 +68,15 @@ void mouseMovement(int xPos, int xNeg, int yPos, int yNeg, int slow) {
 }
 
 void mousePress(int left, int right) {
-  if (left || right) {
-    if (!Mouse.isPressed(MOUSE_LEFT) && !Mouse.isPressed(MOUSE_MIDDLE) && !Mouse.isPressed(MOUSE_RIGHT)) {
-      if (left && right) {
-        Mouse.press(MOUSE_MIDDLE);
-      } else {
-        left ? Mouse.press(MOUSE_LEFT) : Mouse.press(MOUSE_RIGHT);
-      }
-    }
-  } else if (Mouse.isPressed(MOUSE_LEFT)) {
+  if (left && !Mouse.isPressed(MOUSE_LEFT)) {
+    Mouse.press(MOUSE_LEFT);
+  } else if (!left && Mouse.isPressed(MOUSE_LEFT)) {
     Mouse.release(MOUSE_LEFT);
-  } else if (Mouse.isPressed(MOUSE_RIGHT)) {
+  }
+  if (right && !Mouse.isPressed(MOUSE_RIGHT)) {
+    Mouse.press(MOUSE_RIGHT);
+  } else if (!right && Mouse.isPressed(MOUSE_RIGHT)) {
     Mouse.release(MOUSE_RIGHT);
-  } else if (Mouse.isPressed(MOUSE_MIDDLE)) {
-    Mouse.release(MOUSE_MIDDLE);
   }
 }
 
